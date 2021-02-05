@@ -1,0 +1,27 @@
+#vstar_dg_places_meta {
+  label {
+    display: block;
+  }
+
+  label + label, label + fieldset, fieldset + label {
+    margin-top: 0.5rem;
+  }
+
+  label > * {
+    display: block;
+  }
+
+  fieldset {
+    margin: 1rem 0;
+    // padding: 0.5rem;
+    // background: rgba(0,0,0,0.05);
+    legend {
+      
+    }
+  }
+
+  textarea {
+    width: 100%;
+    height: 4em;
+  }
+}
