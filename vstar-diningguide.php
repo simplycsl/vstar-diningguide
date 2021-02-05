@@ -35,17 +35,17 @@ add_action('admin_enqueue_scripts', 'vstar_dg_adminstyle');
 
 
 
-$places = new VStar_Dining_Guide_Post_Type('Places', 'Places', 'Place', 'Restaurants, etc', [
+$places = new VStar_Dining_Guide_Post_Type('place', 'Places', 'Place', 'Restaurants, etc', [
 	'menu_icon' => 'dashicons-location-alt',
 	'menu_position' => 25,
 	'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions'],
 	'hierarchical' => false,
 	'delete_with_user' => false,
 	'register_meta_box_cb' => 'vstar_dg_metasetup',
-	'taxonomies' => array('vstar_dg_type', 'vstar_dg_amenities'),
 	'rest_base' => 'places',
 	'show_in_rest' => true,
 ]);
+// 'vstar_dg_type', 'vstar_dg_amenities'
 
 // modify default instructions for new posts' titles
 add_filter( 'enter_title_here', function( $title ) {
@@ -86,6 +86,9 @@ function vstar_dg_metasetup(WP_Post $post) {
 
 		$nonce = wp_nonce_field( 'vstar_dg_places_details', 'vstar_dg_nonce' );
 
+
+$types = get_terms('place-types');
+
 echo <<<INPUT
 {$nonce}
 
@@ -94,22 +97,20 @@ echo <<<INPUT
 	<input type="text" value="{$values['address'][0]}" name="vstar_dg_address" id="vstar_dg_address">
 </label>
 
-<fieldset>
-	<legend>Websites</legend>
-	<label>
-		Website
-		<input type="url" value="{$values['website'][0]}" name="vstar_dg_website" id="vstar_dg_website">
-	</label>
-	<label>
-		Facebook
-		<input type="url" value="{$values['facebook'][0]}" name="vstar_dg_facebook" id="vstar_dg_facebook">
-	</label>
-	<label>
-		Instagram
-		<input type="url" value="{$values['instagram'][0]}" name="vstar_dg_instagram" id="vstar_dg_instagram">
-	</label>
-</fieldset>
+<label>
+	Website
+	<input type="url" value="{$values['website'][0]}" name="vstar_dg_website" id="vstar_dg_website">
+</label>
+<label>
+	Facebook
+	<input type="url" value="{$values['facebook'][0]}" name="vstar_dg_facebook" id="vstar_dg_facebook">
+</label>
+<label>
+	Instagram
+	<input type="url" value="{$values['instagram'][0]}" name="vstar_dg_instagram" id="vstar_dg_instagram">
+</label>
 
+{$types}
 <label>
 	Review
 	<textarea name="vstar_dg_review" id="vstar_dg_review">{$values['review'][0]}</textarea>
@@ -153,20 +154,18 @@ add_action('save_post', function($post_id){
 	];
 
   $post = get_post($post_id);
-  $is_revision = wp_is_post_revision($post_id);
 
   // Do not save meta for a revision or on autosave
-  if ( $post->post_type != 'places' || $is_revision )
+  if ( $post->post_type != 'places' || wp_is_post_revision($post_id) )
     return;
 
-  // Do not save meta if fields are not present,
-  // like during a restore.
+  // Do not save meta if fields are not present, like during a restore
   // if( !isset($_POST[]) )
-    // return;
+  //   return;
 
   // Secure with nonce field check
-  // if( ! check_admin_referer('vstar_dg_places_details', 'vstar_dg_nonce') )
-    // return;
+  if( !check_admin_referer('vstar_dg_places_details', 'vstar_dg_nonce') )
+    return;
 
 	// process and save each value
 	foreach ($metas as $key => $prop) {
@@ -213,29 +212,30 @@ add_action('save_post', function($post_id){
 
 
 function vstar_dg_taxonomies() {
-     $labels = array(
-         'name'              => _x( 'Types', 'taxonomy general name' ),
-         'singular_name'     => _x( 'Type', 'taxonomy singular name' ),
-         'search_items'      => __( 'Search Types' ),
-         'all_items'         => __( 'All Types' ),
-         'parent_item'       => __( 'Parent Type' ),
-         'parent_item_colon' => __( 'Parent Type:' ),
-         'edit_item'         => __( 'Edit Type' ),
-         'update_item'       => __( 'Update Type' ),
-         'add_new_item'      => __( 'Add New Type' ),
-         'new_item_name'     => __( 'New Type Name' ),
-         'menu_name'         => __( 'Type' ),
-     );
-     $args   = array(
-         'hierarchical'      => false,
-				 'public'						=> true,
-         'labels'            => $labels,
-         'show_ui'           => true,
-         'show_admin_column' => true,
-         'query_var'         => true,
-         'rewrite'           => [ 'slug' => 'types' ],
-     );
-     register_taxonomy( 'vstar_dg_type', 'Places', $args );
+	$labels = array(
+		'name'              => _x( 'Types', 'taxonomy general name' ),
+		'singular_name'     => _x( 'Type', 'taxonomy singular name' ),
+		'search_items'      => __( 'Search Types' ),
+		'all_items'         => __( 'All Types' ),
+		'parent_item'       => __( 'Parent Type' ),
+		'parent_item_colon' => __( 'Parent Type:' ),
+		'edit_item'         => __( 'Edit Type' ),
+		'update_item'       => __( 'Update Type' ),
+		'add_new_item'      => __( 'Add New Type' ),
+		'new_item_name'     => __( 'New Type Name' ),
+		'menu_name'         => __( 'Type' ),
+	);
+	$args   = array(
+		'hierarchical'      => false,
+		'public'						=> true,
+		'labels'            => $labels,
+		'show_ui'           => true,
+		'show_in_menu' 		=> true,
+		'show_admin_column' => true,
+		'query_var'         => true,
+		'rewrite'           => [ 'slug' => 'type' ],
+	);
+	register_taxonomy( 'place_types', 'place', $args );
 }
 add_action( 'init', 'vstar_dg_taxonomies' );
 
