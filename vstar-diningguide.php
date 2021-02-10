@@ -44,6 +44,7 @@ $places = new VStar_Dining_Guide_Post_Type('place', 'Places', 'Place', 'Restaura
 	'register_meta_box_cb' => 'vstar_dg_metasetup',
 	'rest_base' => 'places',
 	'show_in_rest' => true,
+	'taxonomies' => ['place_types', 'place_amenities', 'place_locales', 'place_times'],
 ]);
 
 // modify default instructions for new posts' titles
@@ -69,50 +70,47 @@ add_filter('use_block_editor_for_post_type', function($enabled, $post_type) {
 
 
 function vstar_dg_metasetup(WP_Post $post) {
-	add_meta_box('vstar_dg_places_meta', 'Place Details', function() use ($post) {
+	add_meta_box('vstar_dg_place_meta', 'Place Details', function() use ($post) {
 		$meta = get_post_meta($post->ID);
 		$values = [
-			'address' => (array_key_exists('vstar_dg_address', $meta) ? $meta['vstar_dg_address'] : ''),
-			'website' => (array_key_exists('vstar_dg_website', $meta) ? $meta['vstar_dg_website'] : ''),
-			'facebook' => (array_key_exists('vstar_dg_facebook', $meta) ? $meta['vstar_dg_facebook'] : ''),
-			'instagram' => (array_key_exists('vstar_dg_instagram', $meta) ? $meta['vstar_dg_instagram'] : ''),
-			'review' => (array_key_exists('vstar_dg_review', $meta) ? $meta['vstar_dg_review'] : ''),
+			'address' => (array_key_exists('vstar_dg_address', $meta) ? $meta['vstar_dg_address'][0] : ''),
+			'website' => (array_key_exists('vstar_dg_website', $meta) ? $meta['vstar_dg_website'][0] : ''),
+			'facebook' => (array_key_exists('vstar_dg_facebook', $meta) ? $meta['vstar_dg_facebook'][0] : ''),
+			'instagram' => (array_key_exists('vstar_dg_instagram', $meta) ? $meta['vstar_dg_instagram'][0] : ''),
+			'review' => (array_key_exists('vstar_dg_review', $meta) ? $meta['vstar_dg_review'][0] : ''),
 
 			// '' => (array_key_exists('vstar_dg_', $meta) ? $meta->vstar_dg_ : ''),
 			// '' => (array_key_exists('vstar_dg_', $meta) ? $meta->vstar_dg_ : ''),
 			// '' => (array_key_exists('vstar_dg_', $meta) ? $meta->vstar_dg_ : ''),
 		];
 
-		$nonce = wp_nonce_field( 'vstar_dg_places_details', 'vstar_dg_nonce' );
+		$nonce = wp_nonce_field( 'vstar_dg_place_details', 'vstar_dg_nonce' );
 
 
-$types = print_r(get_terms('place_types'), true);
 
 echo <<<INPUT
 {$nonce}
-
 <label>
 	Address
-	<input type="text" value="{$values['address'][0]}" name="vstar_dg_address" id="vstar_dg_address">
+	<input type="text" value="{$values['address']}" name="vstar_dg_address" id="vstar_dg_address">
 </label>
 
 <label>
 	Website
-	<input type="url" value="{$values['website'][0]}" name="vstar_dg_website" id="vstar_dg_website">
+	<input type="url" value="{$values['website']}" name="vstar_dg_website" id="vstar_dg_website">
 </label>
 <label>
 	Facebook
-	<input type="url" value="{$values['facebook'][0]}" name="vstar_dg_facebook" id="vstar_dg_facebook">
+	<input type="url" value="{$values['facebook']}" name="vstar_dg_facebook" id="vstar_dg_facebook">
 </label>
 <label>
 	Instagram
-	<input type="url" value="{$values['instagram'][0]}" name="vstar_dg_instagram" id="vstar_dg_instagram">
+	<input type="url" value="{$values['instagram']}" name="vstar_dg_instagram" id="vstar_dg_instagram">
 </label>
 
-{$types}
 <label>
 	Review
-	<textarea name="vstar_dg_review" id="vstar_dg_review">{$values['review'][0]}</textarea>
+	<textarea name="vstar_dg_review" id="vstar_dg_review">{$values['review']}</textarea>
 </label>
 
 
@@ -155,7 +153,7 @@ add_action('save_post', function($post_id){
   $post = get_post($post_id);
 
   // Do not save meta for a revision or on autosave
-  if ( $post->post_type != 'places' || wp_is_post_revision($post_id) )
+  if ( $post->post_type != 'place' || wp_is_post_revision($post_id) )
     return;
 
   // Do not save meta if fields are not present, like during a restore
@@ -163,7 +161,7 @@ add_action('save_post', function($post_id){
   //   return;
 
   // Secure with nonce field check
-  if( !check_admin_referer('vstar_dg_places_details', 'vstar_dg_nonce') )
+  if( !check_admin_referer('vstar_dg_place_details', 'vstar_dg_nonce') )
     return;
 
 	// process and save each value
@@ -236,6 +234,7 @@ function vstar_dg_taxonomies() {
 	);
 	register_taxonomy( 'place_types', 'place', $typeargs );
 
+
 	$amenlabels = array(
 		'name'              => _x( 'Amenities', 'taxonomy general name' ),
 		'singular_name'     => _x( 'Amenity', 'taxonomy singular name' ),
@@ -250,7 +249,7 @@ function vstar_dg_taxonomies() {
 		'menu_name'         => __( 'Amenities' ),
 	);
 	$amenargs   = array(
-		'hierarchical'      => false,
+		'hierarchical'      => true,
 		'public'						=> true,
 		'labels'            => $amenlabels,
 		'show_ui'           => true,
@@ -259,13 +258,74 @@ function vstar_dg_taxonomies() {
 		'query_var'         => true,
 		'rewrite'           => [ 'slug' => 'amenity' ],
 	);
-	register_taxonomy( 'place_amenities', 'amenity', $amenargs );
+	register_taxonomy( 'place_amenities', 'place', $amenargs );
+
+
+	$localelabels = array(
+		'name'              => _x( 'Locales', 'taxonomy general name' ),
+		'singular_name'     => _x( 'Locale', 'taxonomy singular name' ),
+		'search_items'      => __( 'Search Locales' ),
+		'all_items'         => __( 'All Locales' ),
+		'parent_item'       => __( 'Parent Locale' ),
+		'parent_item_colon' => __( 'Parent Locale:' ),
+		'edit_item'         => __( 'Edit Locale' ),
+		'update_item'       => __( 'Update Locale' ),
+		'add_new_item'      => __( 'Add New Locale' ),
+		'new_item_name'     => __( 'New Locale Name' ),
+		'menu_name'         => __( 'Locales' ),
+	);
+	$localeargs   = array(
+		'hierarchical'      => true,
+		'public'						=> true,
+		'labels'            => $localelabels,
+		'show_ui'           => true,
+		'show_in_menu' 		=> true,
+		'show_admin_column' => true,
+		'query_var'         => true,
+		'rewrite'           => [ 'slug' => 'locale' ],
+	);
+	register_taxonomy( 'place_locales', 'place', $localeargs );
+
+
+	$timelabels = array(
+		'name'              => _x( 'Times', 'taxonomy general name' ),
+		'singular_name'     => _x( 'Time', 'taxonomy singular name' ),
+		'search_items'      => __( 'Search Times' ),
+		'all_items'         => __( 'All Times' ),
+		'parent_item'       => __( 'Parent Time' ),
+		'parent_item_colon' => __( 'Parent Time:' ),
+		'edit_item'         => __( 'Edit Time' ),
+		'update_item'       => __( 'Update Time' ),
+		'add_new_item'      => __( 'Add New Time' ),
+		'new_item_name'     => __( 'New Time Name' ),
+		'menu_name'         => __( 'Times' ),
+	);
+	$timeargs   = array(
+		'hierarchical'      => true,
+		'public'						=> true,
+		'labels'            => $timelabels,
+		'show_ui'           => true,
+		'show_in_menu' 		=> true,
+		'show_admin_column' => true,
+		'query_var'         => true,
+		'rewrite'           => [ 'slug' => 'time' ],
+	);
+	register_taxonomy( 'place_times', 'place', $timeargs );
+
+
+
+
 }
 add_action( 'init', 'vstar_dg_taxonomies' );
 
 
 function vstar_dg_registerterms() {
 	$types = [
+		[
+			'name' => 'Favorite',
+			'slug' => 'favorite',
+			'description' => '',
+		],
 		[
 			'name' => 'Restaurant',
 			'slug' => 'restaurant',
@@ -304,10 +364,55 @@ function vstar_dg_registerterms() {
 			'description' => '',
 		],
 		[
-			'name' => 'Open Late',
-			'slug' => 'openlate',
-			'description' => "We call 'late' being open past 9pm",
+			'name' => 'Wifi',
+			'slug' => 'wifi',
+			'description' => '',
 		],
+		[
+			'name' => 'Desserts',
+			'slug' => 'desserts',
+			'description' => '',
+		],
+		[
+			'name' => 'Well-labeled Menu',
+			'slug' => 'welllabeledmenu',
+			'description' => "Their menu has clearly labeled vegetarian and vegan options so you won't have to ask a million questions",
+		],
+	];
+	$locales = [
+		[
+			'name' => 'North',
+			'slug' => 'north',
+			'description' => '',
+		],
+		[
+			'name' => 'South',
+			'slug' => 'south',
+			'description' => '',
+		],
+		[
+			'name' => 'West',
+			'slug' => 'west',
+			'description' => '',
+		],
+		[
+			'name' => 'Downtown',
+			'slug' => 'downtown',
+			'description' => '',
+		],
+		[
+			'name' => 'Campus',
+			'slug' => 'campus',
+			'description' => '',
+		],
+		[
+			'name' => 'East',
+			'slug' => 'east',
+			'description' => '',
+		],
+	];
+
+	$times = [
 		[
 			'name' => 'Breakfast',
 			'slug' => 'breakfast',
@@ -324,31 +429,28 @@ function vstar_dg_registerterms() {
 			'description' => '',
 		],
 		[
-			'name' => 'Wifi',
-			'slug' => 'wifi',
-			'description' => '',
+			'name' => 'Late Night',
+			'slug' => 'latenight',
+			'description' => "We call 'late' being open past 9pm",
 		],
 		[
-			'name' => 'Desserts',
-			'slug' => 'desserts',
+			'name' => '24 Hours',
+			'slug' => 'twentyfourhours',
 			'description' => '',
 		],
-		[
-			'name' => 'Well-labeled Menu',
-			'slug' => 'welllabeledmenu',
-			'description' => "Their menu has clearly labeled vegetarian and vegan options so you won't have to ask a million questions",
-		],
-
 	];
+
 	foreach ($types as $type) {
 		$insert = wp_insert_term( $type['name'], 'place_types', [ 'description' => $type['description'], 'slug' => $type['slug'] ] );
-		// $m = print_r( $insert->get_error_messages(), true );
-		// error_log($m);
 	}
 	foreach ($amenities as $amenity) {
 		$insert = wp_insert_term( $amenity['name'], 'place_amenities', [ 'description' => $amenity['description'], 'slug' => $amenity['slug'] ] );
-		// $m = print_r( $insert->get_error_messages(), true );
-		// error_log($m);
+	}
+	foreach ($locales as $locale) {
+		$insert = wp_insert_term( $locale['name'], 'place_locales', [ 'description' => $locale['description'], 'slug' => $locale['slug'] ] );
+	}
+	foreach ($times as $time) {
+		$insert = wp_insert_term( $time['name'], 'place_times', [ 'description' => $time['description'], 'slug' => $time['slug'] ] );
 	}
 }
 // register_activation_hook( __FILE__, 'vstar_dg_registerterms' );
