@@ -38,14 +38,13 @@ add_action('admin_enqueue_scripts', 'vstar_dg_adminstyle');
 $places = new VStar_Dining_Guide_Post_Type('place', 'Places', 'Place', 'Restaurants, etc', [
 	'menu_icon' => 'dashicons-location-alt',
 	'menu_position' => 25,
-	'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions'],
+	'supports' => ['title', 'editor', 'excerpt', 'thumbnail'],
 	'hierarchical' => false,
 	'delete_with_user' => false,
 	'register_meta_box_cb' => 'vstar_dg_metasetup',
 	'rest_base' => 'places',
 	'show_in_rest' => true,
 ]);
-// 'vstar_dg_type', 'vstar_dg_amenities'
 
 // modify default instructions for new posts' titles
 add_filter( 'enter_title_here', function( $title ) {
@@ -57,7 +56,7 @@ add_filter( 'enter_title_here', function( $title ) {
 } );
 // disable Gutenberg editor for custom post types
 add_filter('use_block_editor_for_post_type', function($enabled, $post_type) {
-  $remove_gutenberg_from = ['places'];
+  $remove_gutenberg_from = ['place'];
   if (in_array($post_type, $remove_gutenberg_from)) {
       return false;
   }
@@ -87,7 +86,7 @@ function vstar_dg_metasetup(WP_Post $post) {
 		$nonce = wp_nonce_field( 'vstar_dg_places_details', 'vstar_dg_nonce' );
 
 
-$types = get_terms('place-types');
+$types = print_r(get_terms('place_types'), true);
 
 echo <<<INPUT
 {$nonce}
@@ -212,7 +211,7 @@ add_action('save_post', function($post_id){
 
 
 function vstar_dg_taxonomies() {
-	$labels = array(
+	$typelabels = array(
 		'name'              => _x( 'Types', 'taxonomy general name' ),
 		'singular_name'     => _x( 'Type', 'taxonomy singular name' ),
 		'search_items'      => __( 'Search Types' ),
@@ -223,23 +222,144 @@ function vstar_dg_taxonomies() {
 		'update_item'       => __( 'Update Type' ),
 		'add_new_item'      => __( 'Add New Type' ),
 		'new_item_name'     => __( 'New Type Name' ),
-		'menu_name'         => __( 'Type' ),
+		'menu_name'         => __( 'Types' ),
 	);
-	$args   = array(
-		'hierarchical'      => false,
+	$typeargs   = array(
+		'hierarchical'      => true,
 		'public'						=> true,
-		'labels'            => $labels,
+		'labels'            => $typelabels,
 		'show_ui'           => true,
 		'show_in_menu' 		=> true,
 		'show_admin_column' => true,
 		'query_var'         => true,
 		'rewrite'           => [ 'slug' => 'type' ],
 	);
-	register_taxonomy( 'place_types', 'place', $args );
+	register_taxonomy( 'place_types', 'place', $typeargs );
+
+	$amenlabels = array(
+		'name'              => _x( 'Amenities', 'taxonomy general name' ),
+		'singular_name'     => _x( 'Amenity', 'taxonomy singular name' ),
+		'search_items'      => __( 'Search Amenities' ),
+		'all_items'         => __( 'All Amenities' ),
+		'parent_item'       => __( 'Parent Amenity' ),
+		'parent_item_colon' => __( 'Parent Amenity:' ),
+		'edit_item'         => __( 'Edit Amenity' ),
+		'update_item'       => __( 'Update Amenity' ),
+		'add_new_item'      => __( 'Add New Amenity' ),
+		'new_item_name'     => __( 'New Amenity Name' ),
+		'menu_name'         => __( 'Amenities' ),
+	);
+	$amenargs   = array(
+		'hierarchical'      => false,
+		'public'						=> true,
+		'labels'            => $amenlabels,
+		'show_ui'           => true,
+		'show_in_menu' 		=> true,
+		'show_admin_column' => true,
+		'query_var'         => true,
+		'rewrite'           => [ 'slug' => 'amenity' ],
+	);
+	register_taxonomy( 'place_amenities', 'amenity', $amenargs );
 }
 add_action( 'init', 'vstar_dg_taxonomies' );
 
 
+function vstar_dg_registerterms() {
+	$types = [
+		[
+			'name' => 'Restaurant',
+			'slug' => 'restaurant',
+			'description' => '',
+		],
+		[
+			'name' => 'Bar',
+			'slug' => 'bar',
+			'description' => '',
+		],
+		[
+			'name' => 'Food Truck',
+			'slug' => 'foodtruck',
+			'description' => '',
+		],
+		[
+			'name' => 'Bakery or Café',
+			'slug' => 'bakerycafe',
+			'description' => '',
+		],
+		[
+			'name' => 'Grocery',
+			'slug' => 'grocery',
+			'description' => '',
+		],
+	];
+	$amenities = [
+		[
+			'name' => 'Full Bar',
+			'slug' => 'fullbar',
+			'description' => 'Versus just beer/wine',
+		],
+		[
+			'name' => 'Gluten-free Options',
+			'slug' => 'glutenfree',
+			'description' => '',
+		],
+		[
+			'name' => 'Open Late',
+			'slug' => 'openlate',
+			'description' => "We call 'late' being open past 9pm",
+		],
+		[
+			'name' => 'Breakfast',
+			'slug' => 'breakfast',
+			'description' => '',
+		],
+		[
+			'name' => 'Lunch',
+			'slug' => 'lunch',
+			'description' => '',
+		],
+		[
+			'name' => 'Dinner',
+			'slug' => 'dinner',
+			'description' => '',
+		],
+		[
+			'name' => 'Wifi',
+			'slug' => 'wifi',
+			'description' => '',
+		],
+		[
+			'name' => 'Desserts',
+			'slug' => 'desserts',
+			'description' => '',
+		],
+		[
+			'name' => 'Well-labeled Menu',
+			'slug' => 'welllabeledmenu',
+			'description' => "Their menu has clearly labeled vegetarian and vegan options so you won't have to ask a million questions",
+		],
+
+	];
+	foreach ($types as $type) {
+		$insert = wp_insert_term( $type['name'], 'place_types', [ 'description' => $type['description'], 'slug' => $type['slug'] ] );
+		// $m = print_r( $insert->get_error_messages(), true );
+		// error_log($m);
+	}
+	foreach ($amenities as $amenity) {
+		$insert = wp_insert_term( $amenity['name'], 'place_amenities', [ 'description' => $amenity['description'], 'slug' => $amenity['slug'] ] );
+		// $m = print_r( $insert->get_error_messages(), true );
+		// error_log($m);
+	}
+}
+// register_activation_hook( __FILE__, 'vstar_dg_registerterms' );
+
+
+
+
+
+
+// RESTORE THIS BACK TO register_activation_hook after development
+add_action( 'init', 'vstar_dg_registerterms', 99 );
 
 
 
@@ -252,6 +372,75 @@ add_action( 'init', 'vstar_dg_taxonomies' );
 
 
 
+
+
+class Test_Terms {
+
+    function __construct() {
+        register_activation_hook( __FILE__,array( $this,'activate' ) );
+        add_action( 'init', array( $this, 'create_cpts_and_taxonomies' ) );
+    }
+
+    function activate() {
+        $this->create_cpts_and_taxonomies();
+        $this->register_new_terms();
+    }
+
+    function create_cpts_and_taxonomies() {
+
+        $args = array(
+            'hierarchical'                      => true,
+            'labels' => array(
+                'name'                          => _x('Test Tax', 'taxonomy general name' ),
+                'singular_name'                 => _x('Test Tax', 'taxonomy singular name'),
+                'search_items'                  => __('Search Test Tax'),
+                'popular_items'                 => __('Popular Test Tax'),
+                'all_items'                     => __('All Test Tax'),
+                'edit_item'                     => __('Edit Test Tax'),
+                'edit_item'                     => __('Edit Test Tax'),
+                'update_item'                   => __('Update Test Tax'),
+                'add_new_item'                  => __('Add New Test Tax'),
+                'new_item_name'                 => __('New Test Tax Name'),
+                'separate_items_with_commas'    => __('Seperate Test Tax with Commas'),
+                'add_or_remove_items'           => __('Add or Remove Test Tax'),
+                'choose_from_most_used'         => __('Choose from Most Used Test Tax')
+            ),
+            'query_var'                         => true,
+            'rewrite'                           => array('slug' =>'test-tax')
+        );
+        register_taxonomy( 'test_tax', array( 'post' ), $args );
+    }
+
+    function register_new_terms() {
+        $this->taxonomy = 'test_tax';
+        $this->terms = array (
+            '0' => array (
+                'name'          => 'Tester 1',
+                'slug'          => 'tester-1',
+                'description'   => 'This is a test term one',
+            ),
+            '1' => array (
+                'name'          => 'Tester 2',
+                'slug'          => 'tester-2',
+                'description'   => 'This is a test term two',
+            ),
+        );
+
+        foreach ( $this->terms as $term_key=>$term) {
+                wp_insert_term(
+                    $term['name'],
+                    $this->taxonomy,
+                    array(
+                        'description'   => $term['description'],
+                        'slug'          => $term['slug'],
+                    )
+                );
+            unset( $term );
+        }
+
+    }
+}
+// $Test_Terms = new Test_Terms();
 
 
 
