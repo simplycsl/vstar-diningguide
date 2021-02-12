@@ -3,7 +3,7 @@
 * Plugin Name: VStar Dining Guide
 * Version: 1.0.0
 * Plugin URI: https://cohere.studio
-* Description: WordPress plugin providing dining guide functionality
+* Description: Curate a collection of restaurants and other businesses in your region that cater to vegans and vegetarians
 * Author: Cohere Studio
 * Author URI: https://cohere.studio
 * Requires at least: 4.0
@@ -156,31 +156,31 @@ add_action('save_post', function($post_id){
   if ( $post->post_type != 'place' || wp_is_post_revision($post_id) )
     return;
 
-  // Do not save meta if fields are not present, like during a restore
-  // if( !isset($_POST[]) )
+  // // Do not save meta if fields are not present, like during a restore
+  // if( !isset($_POST) )
   //   return;
+	//
+  // // Secure with nonce field check
+  // if ( check_admin_referer('vstar_dg_place_details', 'vstar_dg_nonce') ) {
 
-  // Secure with nonce field check
-  if( !check_admin_referer('vstar_dg_place_details', 'vstar_dg_nonce') )
-    return;
+		// process and save each value
+		foreach ($metas as $key => $prop) {
 
-	// process and save each value
-	foreach ($metas as $key => $prop) {
+			switch ($prop['type']) {
 
-		switch ($prop['type']) {
+		    case 'text':
+					$value = filter_var( trim($_POST[$key]), FILTER_SANITIZE_STRING );
+		    break;
 
-      case 'text':
-				$value = filter_var( trim($_POST[$key]), FILTER_SANITIZE_STRING );
-      break;
+				case 'url':
+					$value = filter_var( trim($_POST[$key]), FILTER_SANITIZE_URL );
+				break;
 
-			case 'url':
-				$value = filter_var( trim($_POST[$key]), FILTER_SANITIZE_URL );
-			break;
+			}
 
+			update_post_meta($post_id, $key, $value);
 		}
-
-		update_post_meta($post_id, $key, $value);
-	}
+	
 });
 
 
