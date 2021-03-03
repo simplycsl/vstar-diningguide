@@ -38,7 +38,7 @@ add_action('admin_enqueue_scripts', 'vstar_dg_adminstyle');
 $places = new VStar_Dining_Guide_Post_Type('place', 'Places', 'Place', 'Restaurants, etc', [
 	'menu_icon' => 'dashicons-location-alt',
 	'menu_position' => 25,
-	'supports' => ['title', 'editor', 'excerpt', 'thumbnail'],
+	'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'comments'],
 	'hierarchical' => false,
 	'delete_with_user' => false,
 	'register_meta_box_cb' => 'vstar_dg_metasetup',
@@ -77,16 +77,8 @@ function vstar_dg_metasetup(WP_Post $post) {
 			'website' => (array_key_exists('vstar_dg_website', $meta) ? $meta['vstar_dg_website'][0] : ''),
 			'facebook' => (array_key_exists('vstar_dg_facebook', $meta) ? $meta['vstar_dg_facebook'][0] : ''),
 			'instagram' => (array_key_exists('vstar_dg_instagram', $meta) ? $meta['vstar_dg_instagram'][0] : ''),
-			'review' => (array_key_exists('vstar_dg_review', $meta) ? $meta['vstar_dg_review'][0] : ''),
-
-			// '' => (array_key_exists('vstar_dg_', $meta) ? $meta->vstar_dg_ : ''),
-			// '' => (array_key_exists('vstar_dg_', $meta) ? $meta->vstar_dg_ : ''),
-			// '' => (array_key_exists('vstar_dg_', $meta) ? $meta->vstar_dg_ : ''),
 		];
-
 		$nonce = wp_nonce_field( 'vstar_dg_place_details', 'vstar_dg_nonce' );
-
-
 
 echo <<<INPUT
 {$nonce}
@@ -108,22 +100,41 @@ echo <<<INPUT
 	<input type="url" value="{$values['instagram']}" name="vstar_dg_instagram" id="vstar_dg_instagram">
 </label>
 
+INPUT;
+  });
+
+
+
+	add_meta_box('vstar_dg_place_reviews', 'Place Reviews', function() use ($post) {
+		$reviews = get_comments($post->ID);
+		if ( $reviews ) {
+			foreach ( $comments as $comment ) {
+				echo $comment->comment_author;
+				echo $comment->comment_content;
+			}
+		}
+
+		$users = get_users();
+		$userlist = '';
+		foreach ( $users as $user ) {
+			$userlist .= "<option value='{$user->id}'>{$user->display_name}</option>";
+		}
+
+echo <<<COMMENTS
+{$nonce}
+<label>
+	Reviewer
+	<select name="vstar_dg_comment_author" id="vstar_dg_comment_author">
+		<option value="" disabled>Select an author</option>
+		{$userlist}
+	</select>
+</label>
 <label>
 	Review
-	<textarea name="vstar_dg_review" id="vstar_dg_review">{$values['review']}</textarea>
+	<textarea name="vstar_dg_comment_content" id="vstar_dg_comment_content"></textarea>
 </label>
-
-
-
-
-
-INPUT;
-
-
-
-
-
-  });
+COMMENTS;
+	});
 }
 
 
@@ -144,9 +155,6 @@ add_action('save_post', function($post_id){
 		],
 		'vstar_dg_instagram' => [
 			'type' => 'url',
-		],
-		'vstar_dg_review' => [
-			'type' => 'text',
 		],
 	];
 
@@ -180,7 +188,16 @@ add_action('save_post', function($post_id){
 
 			update_post_meta($post_id, $key, $value);
 		}
-	
+
+		// reviews as comments
+		if ( $_POST['vstar_dg_comment_content'] != '' ) {
+			wp_new_comment([
+				'comment_post_ID' => $post_id,
+				'comment_content' => $_POST['vstar_dg_comment_content'],
+				'user_id' => $_POST['vstar_dg_comment_author'],
+			]);
+		}
+
 });
 
 
