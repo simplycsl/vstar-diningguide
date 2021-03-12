@@ -191,11 +191,13 @@ add_action('save_post', function($post_id){
 
 		// reviews as comments
 		if ( $_POST['vstar_dg_comment_content'] != '' ) {
-			wp_new_comment([
+			$comment = wp_new_comment([
 				'comment_post_ID' => $post_id,
 				'comment_content' => $_POST['vstar_dg_comment_content'],
 				'user_id' => $_POST['vstar_dg_comment_author'],
 			]);
+
+			wp_set_comment_status($comment, 'approve');
 		}
 
 });
@@ -371,9 +373,9 @@ function vstar_dg_registerterms() {
 	];
 	$amenities = [
 		[
-			'name' => 'Full Bar',
-			'slug' => 'fullbar',
-			'description' => 'Versus just beer/wine',
+			'name' => 'Alcohol',
+			'slug' => 'alcohol',
+			'description' => '',
 		],
 		[
 			'name' => 'Gluten-free Options',
@@ -393,7 +395,7 @@ function vstar_dg_registerterms() {
 		[
 			'name' => 'Well-labeled Menu',
 			'slug' => 'welllabeledmenu',
-			'description' => "Their menu has clearly labeled vegetarian and vegan options so you won't have to ask a million questions",
+			'description' => "Their menu has clearly labeled vegetarian and vegan options so you won't have to ask a million questions.",
 		],
 	];
 	$locales = [
@@ -492,74 +494,6 @@ add_action( 'init', 'vstar_dg_registerterms', 99 );
 
 
 
-
-class Test_Terms {
-
-    function __construct() {
-        register_activation_hook( __FILE__,array( $this,'activate' ) );
-        add_action( 'init', array( $this, 'create_cpts_and_taxonomies' ) );
-    }
-
-    function activate() {
-        $this->create_cpts_and_taxonomies();
-        $this->register_new_terms();
-    }
-
-    function create_cpts_and_taxonomies() {
-
-        $args = array(
-            'hierarchical'                      => true,
-            'labels' => array(
-                'name'                          => _x('Test Tax', 'taxonomy general name' ),
-                'singular_name'                 => _x('Test Tax', 'taxonomy singular name'),
-                'search_items'                  => __('Search Test Tax'),
-                'popular_items'                 => __('Popular Test Tax'),
-                'all_items'                     => __('All Test Tax'),
-                'edit_item'                     => __('Edit Test Tax'),
-                'edit_item'                     => __('Edit Test Tax'),
-                'update_item'                   => __('Update Test Tax'),
-                'add_new_item'                  => __('Add New Test Tax'),
-                'new_item_name'                 => __('New Test Tax Name'),
-                'separate_items_with_commas'    => __('Seperate Test Tax with Commas'),
-                'add_or_remove_items'           => __('Add or Remove Test Tax'),
-                'choose_from_most_used'         => __('Choose from Most Used Test Tax')
-            ),
-            'query_var'                         => true,
-            'rewrite'                           => array('slug' =>'test-tax')
-        );
-        register_taxonomy( 'test_tax', array( 'post' ), $args );
-    }
-
-    function register_new_terms() {
-        $this->taxonomy = 'test_tax';
-        $this->terms = array (
-            '0' => array (
-                'name'          => 'Tester 1',
-                'slug'          => 'tester-1',
-                'description'   => 'This is a test term one',
-            ),
-            '1' => array (
-                'name'          => 'Tester 2',
-                'slug'          => 'tester-2',
-                'description'   => 'This is a test term two',
-            ),
-        );
-
-        foreach ( $this->terms as $term_key=>$term) {
-                wp_insert_term(
-                    $term['name'],
-                    $this->taxonomy,
-                    array(
-                        'description'   => $term['description'],
-                        'slug'          => $term['slug'],
-                    )
-                );
-            unset( $term );
-        }
-
-    }
-}
-// $Test_Terms = new Test_Terms();
 
 
 
