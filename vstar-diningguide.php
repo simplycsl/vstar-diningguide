@@ -343,39 +343,39 @@ function vstar_dg_registerterms() {
 		[
 			'name' => 'Favorite',
 			'slug' => 'favorite',
-			'description' => '',
+			'description' => 'A favorite of BloomingVeg, offering a well-labeled menu with plenty of vegan options.',
 		],
 		[
 			'name' => 'Restaurant',
 			'slug' => 'restaurant',
-			'description' => '',
+			'description' => 'Offers seating and a full menu.',
 		],
 		[
 			'name' => 'Bar',
 			'slug' => 'bar',
-			'description' => '',
+			'description' => 'Primarily serves alcohol, but also offers food.',
 		],
 		[
 			'name' => 'Food Truck',
 			'slug' => 'foodtruck',
-			'description' => '',
+			'description' => 'Mobile food services.',
 		],
 		[
 			'name' => 'Bakery or Café',
 			'slug' => 'bakerycafe',
-			'description' => '',
+			'description' => 'Primarily serves baked goods and/or coffee.',
 		],
 		[
 			'name' => 'Grocery',
 			'slug' => 'grocery',
-			'description' => '',
+			'description' => 'Primarily serves unprepared food.',
 		],
 	];
 	$amenities = [
 		[
 			'name' => 'Alcohol',
 			'slug' => 'alcohol',
-			'description' => '',
+			'description' => 'Offers drinks beyond just beer or wine.',
 		],
 		[
 			'name' => 'Gluten-free Options',
@@ -435,27 +435,22 @@ function vstar_dg_registerterms() {
 		[
 			'name' => 'Breakfast',
 			'slug' => 'breakfast',
-			'description' => '',
+			'description' => 'Serves breakfast-style food in the morning, from 5am–11am.',
 		],
 		[
 			'name' => 'Lunch',
 			'slug' => 'lunch',
-			'description' => '',
+			'description' => 'Serves a lunch-time menu, from 11am–4pm.',
 		],
 		[
 			'name' => 'Dinner',
 			'slug' => 'dinner',
-			'description' => '',
+			'description' => 'Serves a dinner-time menu, from 4pm–9pm.',
 		],
 		[
 			'name' => 'Late Night',
 			'slug' => 'latenight',
-			'description' => "We call 'late' being open past 9pm",
-		],
-		[
-			'name' => '24 Hours',
-			'slug' => 'twentyfourhours',
-			'description' => '',
+			'description' => "We call 'late' being open past 9pm.",
 		],
 	];
 
