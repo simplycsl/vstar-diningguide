@@ -332,6 +332,32 @@ function vstar_dg_taxonomies() {
 	register_taxonomy( 'place_times', 'place', $timeargs );
 
 
+	$foodslabels = array(
+		'name'              => _x( 'Foods', 'taxonomy general name' ),
+		'singular_name'     => _x( 'Food', 'taxonomy singular name' ),
+		'search_items'      => __( 'Search Foods' ),
+		'all_items'         => __( 'All Foods' ),
+		'parent_item'       => __( 'Parent Food' ),
+		'parent_item_colon' => __( 'Parent Food:' ),
+		'edit_item'         => __( 'Edit Food' ),
+		'update_item'       => __( 'Update Food' ),
+		'add_new_item'      => __( 'Add New Food' ),
+		'new_item_name'     => __( 'New Food Name' ),
+		'menu_name'         => __( 'Foods' ),
+	);
+	$foodsargs   = array(
+		'hierarchical'      => true,
+		'public'						=> true,
+		'labels'            => $foodslabels,
+		'show_ui'           => true,
+		'show_in_menu' 		=> true,
+		'show_admin_column' => true,
+		'query_var'         => true,
+		'rewrite'           => [ 'slug' => 'food' ],
+	);
+	register_taxonomy( 'place_foods', 'place', $foodsargs );
+
+
 
 
 }
