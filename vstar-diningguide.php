@@ -26,9 +26,10 @@ add_action('admin_enqueue_scripts', 'vstar_dg_adminstyle');
 
 
 
-
-
-
+function vstar_dg_dependency_checks() {
+	$GLOBALS['vstar_dg_dependencies']['eventsmanager'] = is_plugin_active( 'events-manager/events-manager.php' );
+}
+add_action( 'admin_init', 'vstar_dg_dependency_checks' );
 
 
 
@@ -70,23 +71,18 @@ add_filter('use_block_editor_for_post_type', function($enabled, $post_type) {
 
 
 function vstar_dg_metasetup(WP_Post $post) {
-	add_meta_box('vstar_dg_place_meta', 'Place Details', function() use ($post) {
+
+	add_meta_box('vstar_dg_place_links', 'Place Links', function() use ($post) {
 		$meta = get_post_meta($post->ID);
 		$values = [
-			'address' => (array_key_exists('vstar_dg_address', $meta) ? $meta['vstar_dg_address'][0] : ''),
 			'website' => (array_key_exists('vstar_dg_website', $meta) ? $meta['vstar_dg_website'][0] : ''),
 			'facebook' => (array_key_exists('vstar_dg_facebook', $meta) ? $meta['vstar_dg_facebook'][0] : ''),
 			'instagram' => (array_key_exists('vstar_dg_instagram', $meta) ? $meta['vstar_dg_instagram'][0] : ''),
 		];
-		$nonce = wp_nonce_field( 'vstar_dg_place_details', 'vstar_dg_nonce' );
+		$nonce = wp_nonce_field( 'vstar_dg_place_links', 'vstar_dg_nonce' );
 
 echo <<<INPUT
 {$nonce}
-<label>
-	Address
-	<input type="text" value="{$values['address']}" name="vstar_dg_address" id="vstar_dg_address">
-</label>
-
 <label>
 	Website
 	<input type="url" value="{$values['website']}" name="vstar_dg_website" id="vstar_dg_website">
@@ -102,39 +98,82 @@ echo <<<INPUT
 
 INPUT;
   });
+	add_meta_box('vstar_dg_place_locations', 'Place Locations', function() use ($post) {
 
+		if ( $GLOBALS['vstar_dg_dependencies']['eventsmanager'] ) {
 
-
-	add_meta_box('vstar_dg_place_reviews', 'Place Reviews', function() use ($post) {
-		$reviews = get_comments($post->ID);
-		if ( $reviews ) {
-			foreach ( $comments as $comment ) {
-				echo $comment->comment_author;
-				echo $comment->comment_content;
+			global $wpdb;
+			$locations_query = $wpdb->get_results( "SELECT * FROM wp_em_locations WHERE location_name LIKE '$post->post_title%'" );
+			if ( count($locations_query) ) {
+				$locations_list = '';
+				foreach ( $locations_query as $location ) {
+					$locations_list .= "<tr><td>$location->location_name</td><td>$location->location_address, $location->location_postcode</td></tr>";
+				}
+echo <<<EXTANT
+<h3>Existing Locations</h3>
+<table>
+	<tr><th>Location Name</th><th>Address</th></tr>
+	{$locations_list}
+</table>
+EXTANT;
 			}
+
+
+echo <<<INPUT
+<h3>Add New Location</h3>
+<p>If the Place has multiple locations, make sure that the new location name matches the Place name's beginning, with any specific location details coming at the end. Example: <em>{$post->post_title} - West</em></p>
+<p><a href="/wp-admin/post-new.php?post_type=location">Add new Location</a></p>
+INPUT;
+
+// <label>
+// 	Location Name
+// 	<input type="text" name="vstar_dg_locationname" id="vstar_dg_locationname" value="{$post->post_title}">
+// </label>
+// <label>
+// 	Address
+// 	<input type="text" name="vstar_dg_address" id="vstar_dg_address">
+// </label>
+// <label>
+// 	City
+// 	<input type="text" name="vstar_dg_city" id="vstar_dg_city" value="Bloomington">
+// </label>
+// <label>
+// 	ZIP
+// 	<input type="text" name="vstar_dg_zip" id="vstar_dg_zip">
+// </label>
+
 		}
+		else {
+			print "<p>Locations are not supported without the Events Manager plugin.</p>";
+		}
+  });
+
+
+
+	add_meta_box('vstar_dg_place_recommendations', 'Place Recommendations', function() use ($post) {
 
 		$users = get_users();
 		$userlist = '';
 		foreach ( $users as $user ) {
-			$userlist .= "<option value='{$user->id}'>{$user->display_name}</option>";
+			$userlist .= "<option value='{$user->ID}'>{$user->display_name}</option>";
 		}
 
 echo <<<COMMENTS
-{$nonce}
 <label>
 	Reviewer
 	<select name="vstar_dg_comment_author" id="vstar_dg_comment_author">
-		<option value="" disabled>Select an author</option>
+		<option value="" disabled selected>Select an author</option>
 		{$userlist}
 	</select>
 </label>
 <label>
-	Review
+	Recommendation
 	<textarea name="vstar_dg_comment_content" id="vstar_dg_comment_content"></textarea>
 </label>
 COMMENTS;
 	});
+
+
 }
 
 
@@ -144,9 +183,6 @@ COMMENTS;
 add_action('save_post', function($post_id){
 
 	$metas = [
-		'vstar_dg_address' => [
-			'type' => 'text',
-		],
 		'vstar_dg_website' => [
 			'type' => 'url',
 		],
@@ -157,6 +193,7 @@ add_action('save_post', function($post_id){
 			'type' => 'url',
 		],
 	];
+
 
   $post = get_post($post_id);
 
@@ -188,6 +225,14 @@ add_action('save_post', function($post_id){
 
 			update_post_meta($post_id, $key, $value);
 		}
+		// // process and save location info
+		// $locationname = filter_var( trim($_POST['vstar_dg_locationname']), FILTER_SANITIZE_STRING );
+		// $address = filter_var( trim($_POST['vstar_dg_address']), FILTER_SANITIZE_STRING );
+		// $city = filter_var( trim($_POST['vstar_dg_city']), FILTER_SANITIZE_STRING );
+		// $zip = filter_var( trim($_POST['vstar_dg_zip']), FILTER_SANITIZE_STRING );
+		//
+		// $location = EM_Locations::create();
+
 
 		// reviews as comments
 		if ( $_POST['vstar_dg_comment_content'] != '' ) {
