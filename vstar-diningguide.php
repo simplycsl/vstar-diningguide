@@ -103,8 +103,9 @@ INPUT;
 		if ( $GLOBALS['vstar_dg_dependencies']['eventsmanager'] ) {
 
 			global $wpdb;
-			$locations_query = $wpdb->get_results( "SELECT * FROM wp_em_locations WHERE location_name LIKE '$post->post_title%'" );
-			if ( count($locations_query) ) {
+			$title_string = str_replace("'", "\'", $post->post_title) . "%";
+			$locations_query = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM wp_em_locations WHERE location_name LIKE %s", $title_string) );
+			if ( $locations_query ) {
 				$locations_list = '';
 				foreach ( $locations_query as $location ) {
 					$locations_list .= "<tr><td>$location->location_name</td><td>$location->location_address, $location->location_postcode</td></tr>";
@@ -122,7 +123,7 @@ EXTANT;
 echo <<<INPUT
 <h3>Add New Location</h3>
 <p>If the Place has multiple locations, make sure that the new location name matches the Place name's beginning, with any specific location details coming at the end. Example: <em>{$post->post_title} - West</em></p>
-<p><a href="/wp-admin/post-new.php?post_type=location">Add new Location</a></p>
+<p><a href="/wp-admin/post-new.php?post_type=location" target="_blank">Add new Location</a></p>
 INPUT;
 
 // <label>
